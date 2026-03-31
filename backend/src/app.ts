@@ -20,8 +20,17 @@ app.use(
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
+      
+      // If no origins configured, allow all (permissive default)
       if (allowed.length === 0) return callback(null, true);
-      return allowed.includes(origin) ? callback(null, true) : callback(null, false);
+      
+      // Allow if origin matches one of the allowed origins
+      if (allowed.includes(origin)) return callback(null, true);
+      
+      // Also allow if origin is a sub-domain of netlify.app (common for these projects)
+      if (origin.endsWith(".netlify.app")) return callback(null, true);
+
+      return callback(null, false);
     },
     credentials: true,
   }),
@@ -29,6 +38,9 @@ app.use(
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-app.use("/api", createRouter());
+// Mount router at both /api and root to handle different deployment environments (server vs serverless)
+const router = createRouter();
+app.use("/api", router);
+app.use("/", router);
 
 export { app };

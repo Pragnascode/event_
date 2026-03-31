@@ -1,0 +1,21 @@
+[build]
+  command = "npm run build"
+  publish = "frontend/dist"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  # This tells Netlify to include Prisma's engine files in the function package
+  external_node_modules = ["@prisma/client"]
+  # Included files must be relative to the project root
+  included_files = ["backend/src/generated/prisma/*.node", "backend/src/generated/prisma/schema.prisma"]
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

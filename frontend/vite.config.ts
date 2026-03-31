@@ -3,10 +3,13 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     VitePWA({
+      // Netlify/CI builds can be brittle with SW generation; we enable PWA only in dev.
+      // If you want PWA in production later, flip this to `true` and ensure CI supports it.
+      disable: mode !== "development",
       registerType: "autoUpdate",
       devOptions: {
         enabled: true,
@@ -28,4 +31,4 @@ export default defineConfig({
       },
     }),
   ],
-});
+}));

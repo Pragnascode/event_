@@ -165,21 +165,26 @@ export default function ChatPage() {
   }
 
   // Group messages by sender and time (within 5 minutes)
-  const groupedMessages: { sender: RoleType; messages: AlertDto[]; time: string; isPanic: boolean }[] = [];
+  const groupedMessages: { sender: RoleType; messages: AlertDto[]; time: string; isPanic: boolean; targetType: string; targetRole: string | null }[] = [];
   messages.forEach((m, i) => {
     const prev = messages[i - 1];
-    // Don't group if one is a panic alert and the other isn't
+    // Don't group if one is a panic alert and the other isn't, OR if targets are different
+    // Also don't group if it's a "TO: ROLE" message, to keep it distinct
     const isSameSender = prev && prev.createdByRole === m.createdByRole && m.isPanic === prev.isPanic;
+    const isSameTarget = prev && prev.targetType === m.targetType && prev.targetRole === m.targetRole;
+    const isNotTargeted = m.targetType === "EVERYONE";
     const isCloseInTime = prev && (new Date(m.createdAt).getTime() - new Date(prev.createdAt).getTime() < 5 * 60 * 1000);
 
-    if (isSameSender && isCloseInTime) {
+    if (isSameSender && isSameTarget && isNotTargeted && isCloseInTime) {
       groupedMessages[groupedMessages.length - 1].messages.push(m);
     } else {
       groupedMessages.push({ 
         sender: m.createdByRole, 
         messages: [m], 
         time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isPanic: m.isPanic
+        isPanic: m.isPanic,
+        targetType: m.targetType,
+        targetRole: m.targetRole
       });
     }
   });
@@ -280,7 +285,7 @@ export default function ChatPage() {
                       <div className="message-header">
                         <span className="sender-name" style={{ color: group.isPanic ? "#f04747" : undefined }}>
                         {roleInfo.label}
-                        {!group.isPanic && group.messages[0].targetType === "ROLE" && (
+                        {!group.isPanic && group.targetType === "ROLE" && (
                           <span style={{ 
                             marginLeft: 8, 
                             fontSize: '10px', 
@@ -290,7 +295,7 @@ export default function ChatPage() {
                             verticalAlign: 'middle',
                             color: '#b9bbbe'
                           }}>
-                            TO: {group.messages[0].targetRole}
+                            TO: {group.targetRole}
                           </span>
                         )}
                       </span>

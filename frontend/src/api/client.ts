@@ -1,7 +1,7 @@
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
+const API_BASE = import.meta.env.VITE_API_BASE ?? "";
 
 export function getApiBase() {
-  return API_BASE;
+  return API_BASE || window.location.origin;
 }
 
 export type ApiError = { error?: string } & Record<string, unknown>;
@@ -17,7 +17,8 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const { method = "GET", jwt, body, query } = opts;
 
-  const url = new URL(API_BASE + path);
+  const base = API_BASE || window.location.origin;
+  const url = new URL(base + path);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
       if (v === undefined) continue;

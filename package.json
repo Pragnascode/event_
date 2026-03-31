@@ -1,0 +1,16 @@
+{
+  "name": "event-app-root",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "build:frontend": "npm run build --workspace=frontend",
+    "build:backend": "npm run prisma:generate --workspace=backend && npm run build --workspace=backend",
+    "build": "npm run build:backend && npm run build:frontend"
+  },
+  "dependencies": {
+    "serverless-http": "^3.2.0"
+  }
+}

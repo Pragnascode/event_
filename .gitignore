@@ -1,0 +1,26 @@
+# Node.js
+node_modules/
+dist/
+dev-dist/
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Databases
+*.db
+*.db-journal
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+
+# Prisma
+/backend/src/generated/prisma/
+
+# Netlify
+.netlify/

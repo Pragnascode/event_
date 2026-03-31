@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: event-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: PORT
+        value: 8080
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: AES_MASTER_KEY_B64
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false

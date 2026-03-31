@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleType {
+  VOLUNTEER
+  ORGANIZER
+  ADMIN
+  EVERYONE
+  DELEGATE
+}
+
+enum AlertTargetType {
+  EVERYONE
+  ROLE
+}
+
+model Room {
+  id             String         @id @default(cuid())
+  eventName      String
+  durationHours  Int            @default(1)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  roleCodes      RoleCode[]
+  participants   Participant[]
+  alerts         Alert[]
+}
+
+model RoleCode {
+  id           String   @id @default(cuid())
+  roomId       String
+  room         Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roleType     RoleType
+
+  // Stored as sha256 hex for fast join matching; plaintext is stored encrypted separately.
+  codeHash     String   @unique
+
+  // Encrypted role code (AES-256-GCM). Returned only to admin.
+  codeIv       String
+  codeCipher   String
+
+  createdAt    DateTime @default(now())
+
+  @@index([roomId, roleType])
+}
+
+model Participant {
+  id            String    @id @default(cuid())
+  roomId        String
+  room          Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  roleType      RoleType
+  deviceId      String
+  joinedAt      DateTime @default(now())
+
+  // Manual map updates: store the latest known location encrypted.
+  locationIv    String?
+  locationCipher String?
+  lastLocationAt DateTime?
+
+  @@unique([roomId, roleType, deviceId])
+  @@index([roomId, roleType, lastLocationAt])
+}
+
+model Alert {
+  id            String   @id @default(cuid())
+  roomId        String
+  room          Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+  createdByRole RoleType
+
+  // Everyone = broadcast; Role = only HEAD/VOLUNTEER
+  targetType    AlertTargetType
+  targetRole    RoleType? // HEAD | VOLUNTEER (nullable for EVERYONE)
+
+  message       String
+  isPanic        Boolean  @default(false)
+}
